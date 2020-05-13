@@ -1,0 +1,26 @@
+# system files
+*.DS_Store
+*.ini
+*~
+~$*
+
+# text editors
+*.dms
+*.s[a-v][a-z]
+*.sw[a-p]
+*.vscode
+
+# preprocessing, object, assembly, debug
+*.[ios]
+*.dSYM
+
+# libs, executables
+*.a
+*.so
+*.dll
+*.out
+*.exe
+
+# text files
+*.txt
+*.pdf
