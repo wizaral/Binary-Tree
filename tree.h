@@ -6,22 +6,21 @@
 #include <iostream>
 #include <numeric>
 
-// template <class T>
-using T = int;
-
+template <class T>
 class Tree final {
     struct Node {
         T data;
         Node *prev = nullptr;
-        Node *next[2]{nullptr, nullptr};    // [0] next[L], [1] next[R]
+        Node *next[2]{nullptr, nullptr}; // [0] next[L], [1] next[R]
     };
-    enum {L = 0, R = 1};
+    enum { L = 0, R = 1 };
 
     using Fcr = const std::function<void(const T &data)>;
     using Fr = const std::function<void(T &data)>;
 
     Node *root_ = nullptr;
     std::size_t size_ = 0;
+
 public:
     Tree() = default;
 
@@ -84,7 +83,7 @@ public:
 
     void merge(const Tree &tree) {
         tree.preorder([this](const T &data) {
-            this->insert(data);
+            insert(data);
         });
     }
 
@@ -202,3 +201,17 @@ private:
         }
     }
 };
+
+#define print(order)                                                              \
+    template <class T>                                                            \
+    std::ostream &print_##order(const Tree<T> &t, std::ostream &os, char delim) { \
+        t.order([&os, &delim](auto &&data) {                                      \
+            os << data << delim;                                                  \
+        });                                                                       \
+        return os;                                                                \
+    }
+
+print(preorder)
+print(inorder)
+print(postorder)
+#undef print
