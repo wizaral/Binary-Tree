@@ -123,12 +123,6 @@ public:
         postorder(root_, f);
     }
 
-    friend bool operator==(const Tree &lhs, const Tree &rhs);
-    friend bool operator!=(const Tree &lhs, const Tree &rhs);
-
-    friend Tree operator+(const Tree &lhs, const Tree &rhs);
-    friend Tree &operator+=(Tree &lhs, const Tree &rhs);
-
 private:
     std::size_t height(const Node *node) const {
         return node ? std::max(height(node->nodes[0]), height(node->nodes[1])) + 1 : 0;
@@ -152,14 +146,6 @@ private:
             }
         }
         return nullptr;
-    }
-
-    bool cmp(const Node *a, const Node *b) const {
-        if (a && b)
-            return a->data == b->data
-                && cmp(a->nodes[0], b->nodes[0])
-                && cmp(a->nodes[1], b->nodes[1]);
-        return !a && !b;
     }
 
     void preorder(Node *node, const std::function<void(T &data)> &f) {
