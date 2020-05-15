@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <numeric>
 
@@ -21,8 +22,7 @@ class Tree final {
     std::size_t size_ = 0;
 
 public:
-    enum Mode { L = 0,
-                R = 1 };
+    enum Mode { L = 0, R = 1 };
 
     Tree() = default;
 
@@ -127,6 +127,11 @@ public:
     void sub_tree_postorder(const T &data, Fcr f, Mode m = L) const {
         if (const auto *d = find(root_, data); d != nullptr)
             postorder(d, f, m);
+    }
+
+    std::ostream &pyramid_print(std::ostream &os) const {
+        size_t step = 0;
+        return pyramid_print(root_, os, step);
     }
 
 private:
@@ -243,6 +248,15 @@ private:
             if (node->data != data)
                 branch(node->next[node->data < data], data, f);
         }
+    }
+
+    std::ostream &pyramid_print(const Node *node, std::ostream &os, size_t step) const {
+        if (node) {
+            pyramid_print(node->next[R], os, step + 1);
+            os << std::setw(step * 6) << node->data << '\n';
+            pyramid_print(node->next[L], os, step + 1);
+        }
+        return os;
     }
 };
 
