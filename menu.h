@@ -6,10 +6,13 @@ void print_menu() {
     std::cout << "2. Erase value from tree." << std::endl;
     std::cout << "3. Find value in tree." << std::endl;
     std::cout << "4. Print tree." << std::endl;
-    std::cout << "5. Print subtree." << std::endl;
-    std::cout << "6. Print leafs." << std::endl;
-    std::cout << "7. Print branch." << std::endl;
-    std::cout << "8. Exit." << std::endl;
+    std::cout << "5. Print subtree by value." << std::endl;
+    std::cout << "6. Print branch by value." << std::endl;
+    std::cout << "7. Print leafs." << std::endl;
+    std::cout << "8. Print tree height." << std::endl;
+    std::cout << "8. Print tree size." << std::endl;
+    std::cout << "0. Clear tree." << std::endl;
+    std::cout << "10. Exit." << std::endl;
     std::cout << "Enter: ";
 }
 
@@ -51,8 +54,7 @@ void find(Tree<T> &tree) {
 
 template <class T>
 void print_tree(Tree<T> &tree) {
-    int type;
-    bool direct;
+    int type, direct;
 
     do {
         std::cout << "Choose type of printing:" << std::endl;
@@ -66,14 +68,14 @@ void print_tree(Tree<T> &tree) {
 
     if (type != 4) {
         std::cout << "Choose direction of printing: " << std::endl;
-        std::cout << "0. direct" << std::endl;
-        std::cout << "1. reversed" << std::endl;
+        std::cout << "1. direct" << std::endl;
+        std::cout << "2. reversed" << std::endl;
         std::cout << "Enter: ";
         std::cin >> direct;
+        std::cout << "Tree: ";
     }
-    typename Tree<T>::Mode m = !direct ? Tree<T>::L : Tree<T>::R;
+    typename Tree<T>::Mode m = direct == 1 ? Tree<T>::L : Tree<T>::R;
 
-    std::cout << "Tree: ";
     if (type == 1)
         print_preorder(tree, std::cout, ' ', m) << std::endl;
     else if (type == 2)
@@ -90,9 +92,7 @@ void print_sub(Tree<T> &tree) {
     std::cout << "Enter element: ";
     std::cin >> data;
 
-    int type;
-    bool direct;
-
+    int type, direct;
     do {
         std::cout << "Choose type of printing:" << std::endl;
         std::cout << "1. preorder" << std::endl;
@@ -103,11 +103,11 @@ void print_sub(Tree<T> &tree) {
     } while (type < 1 || type > 3);
 
     std::cout << "Choose direction of printing: " << std::endl;
-    std::cout << "0. direct" << std::endl;
-    std::cout << "1. reversed" << std::endl;
+    std::cout << "1. direct" << std::endl;
+    std::cout << "2. reversed" << std::endl;
     std::cout << "Enter: ";
     std::cin >> direct;
-    typename Tree<T>::Mode m = !direct ? Tree<T>::L : Tree<T>::R;
+    typename Tree<T>::Mode m = direct == 1 ? Tree<T>::L : Tree<T>::R;
 
     std::cout << "Subtree: ";
     if (type == 1)
@@ -131,6 +131,16 @@ void print_branch(Tree<T> &tree) {
 
     std::cout << "Branch: ";
     print_branch(tree, std::cout, ' ', data) << std::endl;
+}
+
+template <class T>
+void print_height(Tree<T> &tree) {
+    std::cout << "Height: " << tree.height() << std::endl;
+}
+
+template <class T>
+void print_size(Tree<T> &tree) {
+    std::cout << "Size: " << tree.size() << std::endl;
 }
 
 template <class T>
@@ -159,12 +169,21 @@ void menu(Tree<T> &tree) {
             print_sub(tree);
             break;
         case 6:
-            print_leafs(tree);
-            break;
-        case 7:
             print_branch(tree);
             break;
+        case 7:
+            print_leafs(tree);
+            break;
         case 8:
+            print_height(tree);
+            break;
+        case 9:
+            print_size(tree);
+            break;
+        case 0:
+            tree.clear();
+            break;
+        case 10:
             exit_ = true;
         }
     }
