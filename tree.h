@@ -130,7 +130,7 @@ public:
     }
 
     std::ostream &pyramid_print(std::ostream &os) const {
-        size_t step = 0;
+        std::size_t step = 0;
         return pyramid_print(root_, os, step);
     }
 
@@ -250,7 +250,7 @@ private:
         }
     }
 
-    std::ostream &pyramid_print(const Node *node, std::ostream &os, size_t step) const {
+    std::ostream &pyramid_print(const Node *node, std::ostream &os, std::size_t step) const {
         if (node) {
             pyramid_print(node->next[R], os, step + 1);
             os << std::setw(step * 6) << node->data << '\n';
