@@ -76,7 +76,7 @@ public:
     }
 
     bool erase(const T &data) {
-        if (Node *node = find(root_, data); node) {
+        if (auto *node = find(root_, data); node) {
             erase(node);
             return true;
         }
@@ -166,7 +166,7 @@ private:
 
     void erase(Node *node) {
         if (node->next[L] && node->next[R]) {
-            Node *max_ = max(node->next[L]);
+            auto *max_ = max(node->next[L]);
             std::swap(node->data, max_->data);
             return (erase(max_), void());
         } else if (node->prev) {
@@ -243,9 +243,7 @@ private:
 
     void branch(const Node *node, const T &data, Fcr f) const {
         if (node) {
-            f(node->data);
-
-            if (node->data != data)
+            if (f(node->data); node->data != data)
                 branch(node->next[node->data < data], data, f);
         }
     }
