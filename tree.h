@@ -1,18 +1,14 @@
 #pragma once
-
-#include <algorithm>
-#include <array>
 #include <functional>
 #include <iomanip>
-#include <iostream>
-#include <numeric>
+#include <string>
 
 template <class T>
 class Tree final {
-    struct Node {
+    struct Node final {
         T data;
         Node *prev = nullptr;
-        Node *next[2]{nullptr, nullptr}; // [0] next[L], [1] next[R]
+        Node *next[2]{nullptr, nullptr};
     };
 
     using Fcr = std::function<void(const T &data)>;
@@ -22,7 +18,7 @@ class Tree final {
     std::size_t size_ = 0;
 
 public:
-    enum Mode { L = 0, R = 1 };
+    enum Mode { L = 0, R = 1, };
 
     Tree() = default;
 
@@ -35,268 +31,356 @@ public:
     }
 
     Tree &operator=(const Tree &tree) {
-        clear();
-        Tree temp(tree);
-        root_ = temp.root_;
-        size_ = temp.size_;
+        if (this != &tree) {
+            clear();
+            merge(tree);
+        }
         return *this;
     }
 
-    bool empty() const {
-        return size_ == 0;
-    }
+    bool empty() const;
+    std::size_t size() const;
+    std::size_t height() const;
 
-    std::size_t size() const {
-        return size_;
-    }
+    void clear();
+    bool insert(const T &data);
+    bool erase(const T &data);
+    void merge(const Tree &tree);
+    bool find(const T &data) const;
 
-    std::size_t height() const {
-        return height(root_);
-    }
+    void preorder(Fcr f, Mode m = L) const;
+    void inorder(Fcr f, Mode m = L) const;
+    void postorder(Fcr f, Mode m = L) const;
 
-    void clear() {
-        clear(root_);
-        root_ = nullptr;
-    }
+    void leafs(Fcr f, Mode m = L) const;
+    void branch(const T &data, Fcr f) const;
 
-    bool insert(const T &data) {
-        if (root_ == nullptr) {
-            root_ = new Node{data};
-        } else {
-            for (Node *fast = root_, *slow = fast; true; slow = fast) {
-                if (data == fast->data) {
-                    return false;
-                } else if (bool cmp = fast->data < data; !(fast = fast->next[cmp])) {
-                    slow->next[cmp] = new Node{data, slow};
-                    break;
-                }
-            }
-        }
-        return ++size_;
-    }
-
-    bool erase(const T &data) {
-        if (auto *node = find(root_, data); node) {
-            erase(node);
-            return true;
-        }
-        return false;
-    }
-
-    void merge(const Tree &tree) {
-        tree.preorder([this](const T &data) {
-            insert(data);
-        });
-    }
-
-    bool find(const T &data) const {
-        return find(root_, data) != nullptr;
-    }
-
-    void preorder(Fcr f, Mode m = L) const {
-        preorder(root_, f, m);
-    }
-
-    void inorder(Fcr f, Mode m = L) const {
-        inorder(root_, f, m);
-    }
-
-    void postorder(Fcr f, Mode m = L) const {
-        postorder(root_, f, m);
-    }
-
-    void leafs(Fcr f, Mode m = L) const {
-        leafs(root_, f, m);
-    }
-
-    void branch(const T &data, Fcr f) const {
-        if (find(root_, data) != nullptr)
-            branch(root_, data, f);
-    }
-
-    void sub_tree_preorder(const T &data, Fcr f, Mode m = L) const {
-        if (const auto *d = find(root_, data); d != nullptr)
-            preorder(d, f, m);
-    }
-
-    void sub_tree_inorder(const T &data, Fcr f, Mode m = L) const {
-        if (const auto *d = find(root_, data); d != nullptr)
-            inorder(d, f, m);
-    }
-
-    void sub_tree_postorder(const T &data, Fcr f, Mode m = L) const {
-        if (const auto *d = find(root_, data); d != nullptr)
-            postorder(d, f, m);
-    }
-
-    std::ostream &pyramid_print(std::ostream &os) const {
-        std::size_t step = 0;
-        return pyramid_print(root_, os, step);
-    }
+    void sub_tree_preorder(const T &data, Fcr f, Mode m = L) const;
+    void sub_tree_inorder(const T &data, Fcr f, Mode m = L) const;
+    void sub_tree_postorder(const T &data, Fcr f, Mode m = L) const;
 
 private:
-    std::size_t height(const Node *node) const {
-        return node ? std::max(height(node->next[L]), height(node->next[R])) + 1 : 0;
-    }
+    bool compare(const T &lhs, const T &rhs) const;
 
-    void clear(Node *node) {
-        if (node) {
-            clear(node->next[L]);
-            clear(node->next[R]);
-            delete node;
-            --size_;
+    std::size_t height(const Node *node) const;
+    void clear(Node *node);
+    void erase(Node *node);
+
+    Node *find(Node *node, const T &data) const;
+    Node *min(Node *node);
+    Node *max(Node *node);
+
+    void preorder(const Node *node, Fcr f, Mode m = L) const;
+    void inorder(const Node *node, Fcr f, Mode m = L) const;
+    void postorder(const Node *node, Fcr f, Mode m = L) const;
+
+    void leafs(const Node *node, Fcr f, Mode m = L) const;
+    void branch(const Node *node, const T &data, Fcr f) const;
+};
+
+template <class T>
+bool Tree<T>::empty() const {
+    return size_ == 0;
+}
+
+template <class T>
+std::size_t Tree<T>::size() const {
+    return size_;
+}
+
+template <class T>
+std::size_t Tree<T>::height() const {
+    return height(root_);
+}
+
+template <class T>
+void Tree<T>::clear() {
+    clear(root_);
+    root_ = nullptr;
+}
+
+template <class T>
+bool Tree<T>::insert(const T &data) {
+    if (root_ == nullptr) {
+        root_ = new Node{data};
+    } else {
+        for (Node *fast = root_, *slow = fast; true; slow = fast) {
+            if (compare(data, fast->data)) {
+                return false;
+            } else if (bool cmp = fast->data < data; !(fast = fast->next[cmp])) {
+                slow->next[cmp] = new Node{data, slow};
+                break;
+            }
         }
     }
+    return (++size_, true);
+}
 
-    Node *find(Node *node, const T &data) const {
-        return !node || data == node->data ? node : find(node->next[node->data < data], data);
+template <class T>
+bool Tree<T>::erase(const T &data) {
+    if (Node *node = find(root_, data); node) {
+        erase(node);
+        return true;
     }
+    return false;
+}
 
-    Node *min(Node *node) {
-        while (node->next[L])
-            node = node->next[L];
-        return node;
+template <class T>
+void Tree<T>::merge(const Tree &tree) {
+    tree.preorder([this](const T &data) {
+        insert(data);
+    });
+}
+
+template <class T>
+bool Tree<T>::find(const T &data) const {
+    return find(root_, data) != nullptr;
+}
+
+template <class T>
+void Tree<T>::preorder(Fcr f, Mode m) const {
+    preorder(root_, f, m);
+}
+
+template <class T>
+void Tree<T>::inorder(Fcr f, Mode m) const {
+    inorder(root_, f, m);
+}
+
+template <class T>
+void Tree<T>::postorder(Fcr f, Mode m) const {
+    postorder(root_, f, m);
+}
+
+template <class T>
+void Tree<T>::leafs(Fcr f, Mode m) const {
+    leafs(root_, f, m);
+}
+
+template <class T>
+void Tree<T>::branch(const T &data, Fcr f) const {
+    if (find(root_, data) != nullptr)
+        branch(root_, data, f);
+}
+
+template <class T>
+void Tree<T>::sub_tree_preorder(const T &data, Fcr f, Mode m) const {
+    if (const Node *pdata = find(root_, data); pdata != nullptr)
+        preorder(pdata, f, m);
+}
+
+template <class T>
+void Tree<T>::sub_tree_inorder(const T &data, Fcr f, Mode m) const {
+    if (const Node *pdata = find(root_, data); pdata != nullptr)
+        inorder(pdata, f, m);
+}
+
+template <class T>
+void Tree<T>::sub_tree_postorder(const T &data, Fcr f, Mode m) const {
+    if (const Node *pdata = find(root_, data); pdata != nullptr)
+        postorder(pdata, f, m);
+}
+
+#define CHECK_COMPARE(name, op)                                                                   \
+    template <class T, class = void>                                                              \
+    struct name : std::false_type {};                                                             \
+    template <class T>                                                                            \
+    struct name<T, std::void_t<decltype(std::declval<const T &>() op std::declval<const T &>())>> \
+        : std::true_type {};                                                                      \
+    template <class T>                                                                            \
+    inline constexpr bool name##_v = name<T>::value
+
+namespace hidden_____ {
+CHECK_COMPARE(has_eq_op, ==);
+CHECK_COMPARE(has_ne_op, !=);
+CHECK_COMPARE(has_lt_op, <);
+CHECK_COMPARE(has_gt_op, >);
+CHECK_COMPARE(has_le_op, <=);
+CHECK_COMPARE(has_ge_op, >=);
+} // namespace hidden_____
+#undef CHECK_COMPARE
+
+template <class T>
+bool Tree<T>::compare(const T &lhs, const T &rhs) const {
+    using namespace hidden_____;
+    if constexpr (has_eq_op_v<T>) {
+        return lhs == rhs;
+    } else if constexpr (has_ne_op_v<T>) {
+        return !(lhs != rhs);
+    } else if constexpr (has_lt_op_v<T>) {
+        return !(lhs < rhs) && !(rhs < lhs);
+    } else if constexpr (has_gt_op_v<T>) {
+        return !(lhs > rhs) && !(rhs > lhs);
+    } else if constexpr (has_le_op_v<T>) {
+        return lhs <= rhs && rhs <= lhs;
+    } else if constexpr (has_ge_op_v<T>) {
+        return lhs >= rhs && rhs >= lhs;
+    } else {
+        constexpr auto has_any_comparison_operator = has_eq_op_v<T> || has_ne_op_v<T> || has_lt_op_v<T> || has_gt_op_v<T> || has_le_op_v<T> || has_ge_op_v<T>;
+        static_assert(has_any_comparison_operator, "No comparison operator for this operands!");
+        return false;
     }
+}
 
-    Node *max(Node *node) {
-        while (node->next[R])
-            node = node->next[R];
-        return node;
-    }
+template <class T>
+std::size_t Tree<T>::height(const Node *node) const {
+    return node ? std::max(height(node->next[L]), height(node->next[R])) + 1 : 0;
+}
 
-    void erase(Node *node) {
-        if (node->next[L] && node->next[R]) {
-            auto *max_ = max(node->next[L]);
-            std::swap(node->data, max_->data);
-            return (erase(max_), void());
-        } else if (node->prev) {
-            if (node->next[L] || node->next[R])
-                node->prev->next[node == node->prev->next[R]] = node->next[node->next[R] != nullptr];
-            else
-                node->prev->next[node == node->prev->next[R]] = nullptr;
-        } else if (size_ > 1u) {
-            root_ = node->next[node->next[R] != nullptr];
-            root_->prev = nullptr;
-        } else {
-            root_ = nullptr;
-        }
+template <class T>
+void Tree<T>::clear(Node *node) {
+    if (node) {
+        clear(node->next[L]);
+        clear(node->next[R]);
         delete node;
         --size_;
     }
-
-    void preorder(Node *node, Fr f, Mode m = L) {
-        if (node) {
-            f(node->data);
-            preorder(node->next[m != L], f, m);
-            preorder(node->next[m != R], f, m);
-        }
-    }
-
-    void inorder(Node *node, Fr f, Mode m = L) {
-        if (node) {
-            inorder(node->next[m != L], f, m);
-            f(node->data);
-            inorder(node->next[m != R], f, m);
-        }
-    }
-
-    void postorder(Node *node, Fr f, Mode m = L) {
-        if (node) {
-            postorder(node->next[m != L], f, m);
-            postorder(node->next[m != R], f, m);
-            f(node->data);
-        }
-    }
-
-    void preorder(const Node *node, Fcr f, Mode m = L) const {
-        if (node) {
-            f(node->data);
-            preorder(node->next[m != L], f, m);
-            preorder(node->next[m != R], f, m);
-        }
-    }
-
-    void inorder(const Node *node, Fcr f, Mode m = L) const {
-        if (node) {
-            inorder(node->next[m != L], f, m);
-            f(node->data);
-            inorder(node->next[m != R], f, m);
-        }
-    }
-
-    void postorder(const Node *node, Fcr f, Mode m = L) const {
-        if (node) {
-            postorder(node->next[m != L], f, m);
-            postorder(node->next[m != R], f, m);
-            f(node->data);
-        }
-    }
-
-    void leafs(const Node *node, Fcr f, Mode m = L) const {
-        if (node) {
-            if (!node->next[L] && !node->next[R])
-                f(node->data);
-            leafs(node->next[m != L], f, m);
-            leafs(node->next[m != R], f, m);
-        }
-    }
-
-    void branch(const Node *node, const T &data, Fcr f) const {
-        if (node) {
-            if (f(node->data); node->data != data)
-                branch(node->next[node->data < data], data, f);
-        }
-    }
-
-    std::ostream &pyramid_print(const Node *node, std::ostream &os, std::size_t step) const {
-        if (node) {
-            pyramid_print(node->next[R], os, step + 1);
-            os << std::setw(step * 6) << node->data << '\n';
-            pyramid_print(node->next[L], os, step + 1);
-        }
-        return os;
-    }
-};
-
-#define print(order)                                                                                                           \
-    template <class T>                                                                                                         \
-    std::ostream &print_##order(const Tree<T> &t, std::ostream &os, char delim, typename Tree<T>::Mode m = Tree<T>::Mode::L) { \
-        t.order([&os, &delim](auto &&data) {                                                                                   \
-            os << data << delim;                                                                                               \
-        }, m);                                                                                                                 \
-        return os;                                                                                                             \
-    }
-
-print(preorder)
-print(inorder)
-print(postorder)
-#undef print
-
-#define print_sub_tree(order)                                                                                                                 \
-    template <class T>                                                                                                                        \
-    std::ostream &print_##order(const Tree<T> &t, std::ostream &os, char delim, const T &data, typename Tree<T>::Mode m = Tree<T>::Mode::L) { \
-        t.order(data, [&os, &delim](auto &&data) {                                                                                            \
-            os << data << delim;                                                                                                              \
-        }, m);                                                                                                                                \
-        return os;                                                                                                                            \
-    }
-
-print_sub_tree(sub_tree_preorder)
-print_sub_tree(sub_tree_inorder)
-print_sub_tree(sub_tree_postorder)
-#undef print_sub_tree
+}
 
 template <class T>
-std::ostream &print_leafs(const Tree<T> &t, std::ostream &os, char delim, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
-    t.leafs([&os, &delim](auto &&data) {
+typename Tree<T>::Node *Tree<T>::find(Node *node, const T &data) const {
+    return !node || compare(data, node->data) ? node : find(node->next[node->data < data], data);
+}
+
+template <class T>
+typename Tree<T>::Node *Tree<T>::min(Node *node) {
+    while (node->next[L])
+        node = node->next[L];
+    return node;
+}
+
+template <class T>
+typename Tree<T>::Node *Tree<T>::max(Node *node) {
+    while (node->next[R])
+        node = node->next[R];
+    return node;
+}
+
+template <class T>
+void Tree<T>::erase(Node *node) {
+    if (node->next[L] && node->next[R]) {
+        Node *max_ = max(node->next[L]);
+        std::swap(node->data, max_->data);
+        return (erase(max_), void());
+    } else if (node->prev) {
+        if (node->next[L] || node->next[R])
+            node->prev->next[node == node->prev->next[R]] = node->next[node->next[R] != nullptr];
+        else
+            node->prev->next[node == node->prev->next[R]] = nullptr;
+    } else if (size_ > 1u) {
+        root_ = node->next[node->next[R] != nullptr];
+        root_->prev = nullptr;
+    } else {
+        root_ = nullptr;
+    }
+    delete node;
+    --size_;
+}
+
+template <class T>
+void Tree<T>::preorder(const Node *node, Fcr f, Mode m) const {
+    if (node) {
+        f(node->data);
+        preorder(node->next[m != L], f, m);
+        preorder(node->next[m != R], f, m);
+    }
+}
+
+template <class T>
+void Tree<T>::inorder(const Node *node, Fcr f, Mode m) const {
+    if (node) {
+        inorder(node->next[m != L], f, m);
+        f(node->data);
+        inorder(node->next[m != R], f, m);
+    }
+}
+
+template <class T>
+void Tree<T>::postorder(const Node *node, Fcr f, Mode m) const {
+    if (node) {
+        postorder(node->next[m != L], f, m);
+        postorder(node->next[m != R], f, m);
+        f(node->data);
+    }
+}
+
+template <class T>
+void Tree<T>::leafs(const Node *node, Fcr f, Mode m) const {
+    if (node) {
+        if (!node->next[L] && !node->next[R])
+            f(node->data);
+        leafs(node->next[m != L], f, m);
+        leafs(node->next[m != R], f, m);
+    }
+}
+
+template <class T>
+void Tree<T>::branch(const Node *node, const T &data, Fcr f) const {
+    if (node) {
+        if (f(node->data); node->data != data)
+            branch(node->next[node->data < data], data, f);
+    }
+}
+
+template <class T>
+std::ostream &print_preorder(const Tree<T> &lhs, std::ostream &os, const std::string &delim, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
+    lhs.preorder([&os, &delim](const auto &data) {
         os << data << delim;
     }, m);
     return os;
 }
 
 template <class T>
-std::ostream &print_branch(const Tree<T> &t, std::ostream &os, char delim, const T &data) {
-    t.branch(data, [&os, &delim](auto &&data) {
+std::ostream &print_inorder(const Tree<T> &lhs, std::ostream &os, const std::string &delim, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
+    lhs.inorder([&os, &delim](const auto &data) {
+        os << data << delim;
+    }, m);
+    return os;
+}
+
+template <class T>
+std::ostream &print_postorder(const Tree<T> &lhs, std::ostream &os, const std::string &delim, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
+    lhs.postorder([&os, &delim](const auto &data) {
+        os << data << delim;
+    }, m);
+    return os;
+}
+
+template <class T>
+std::ostream &print_sub_tree_preorder(const Tree<T> &lhs, std::ostream &os, const std::string &delim, const T &data, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
+    lhs.sub_tree_preorder(data, [&os, &delim](const auto &data) {
+        os << data << delim;
+    }, m);
+    return os;
+}
+
+template <class T>
+std::ostream &print_sub_tree_inorder(const Tree<T> &lhs, std::ostream &os, const std::string &delim, const T &data, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
+    lhs.sub_tree_inorder(data, [&os, &delim](const auto &data) {
+        os << data << delim;
+    }, m);
+    return os;
+}
+
+template <class T>
+std::ostream &print_sub_tree_postorder(const Tree<T> &lhs, std::ostream &os, const std::string &delim, const T &data, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
+    lhs.sub_tree_postorder(data, [&os, &delim](const auto &data) {
+        os << data << delim;
+    }, m);
+    return os;
+}
+
+template <class T>
+std::ostream &print_leafs(const Tree<T> &lhs, std::ostream &os, const std::string &delim, typename Tree<T>::Mode m = Tree<T>::Mode::L) {
+    lhs.leafs([&os, &delim](const auto &data) {
+        os << data << delim;
+    }, m);
+    return os;
+}
+
+template <class T>
+std::ostream &print_branch(const Tree<T> &lhs, std::ostream &os, const std::string &delim, const T &data) {
+    lhs.branch(data, [&os, &delim](const auto &data) {
         os << data << delim;
     });
     return os;
