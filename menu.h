@@ -1,6 +1,8 @@
+#pragma once
 #include "tree.h"
+#include <iostream>
 
-void print_menu() {
+inline void print_menu() {
     std::cout << std::endl;
     std::cout << "1. Insert value in tree." << std::endl;
     std::cout << "2. Erase value from tree." << std::endl;
@@ -10,7 +12,7 @@ void print_menu() {
     std::cout << "6. Print branch by value." << std::endl;
     std::cout << "7. Print leafs." << std::endl;
     std::cout << "8. Print tree height." << std::endl;
-    std::cout << "8. Print tree size." << std::endl;
+    std::cout << "9. Print tree size." << std::endl;
     std::cout << "0. Clear tree." << std::endl;
     std::cout << "10. Exit." << std::endl;
     std::cout << "Enter: ";
@@ -61,29 +63,25 @@ void print_tree(Tree<T> &tree) {
         std::cout << "1. preorder" << std::endl;
         std::cout << "2. inorder" << std::endl;
         std::cout << "3. postorder" << std::endl;
-        std::cout << "4. pyramid" << std::endl;
         std::cout << "Enter: ";
         std::cin >> type;
-    } while (type < 1 || type > 4);
+    } while (type < 1 || type > 3);
 
-    if (type != 4) {
-        std::cout << "Choose direction of printing: " << std::endl;
-        std::cout << "1. direct" << std::endl;
-        std::cout << "2. reversed" << std::endl;
-        std::cout << "Enter: ";
-        std::cin >> direct;
-        std::cout << "Tree: ";
-    }
+    std::cout << "Choose direction of printing: " << std::endl;
+    std::cout << "1. direct" << std::endl;
+    std::cout << "2. reversed" << std::endl;
+    std::cout << "Enter: ";
+
+    std::cin >> direct;
+    std::cout << "Tree: ";
     typename Tree<T>::Mode m = direct == 1 ? Tree<T>::L : Tree<T>::R;
 
     if (type == 1)
-        print_preorder(tree, std::cout, ' ', m) << std::endl;
+        print_preorder(tree, std::cout, " ", m) << std::endl;
     else if (type == 2)
-        print_inorder(tree, std::cout, ' ', m) << std::endl;
-    else if (type == 3)
-        print_postorder(tree, std::cout, ' ', m) << std::endl;
+        print_inorder(tree, std::cout, " ", m) << std::endl;
     else
-        tree.pyramid_print(std::cout) << std::endl;
+        print_postorder(tree, std::cout, " ", m) << std::endl;
 }
 
 template <class T>
@@ -106,21 +104,32 @@ void print_sub(Tree<T> &tree) {
     std::cout << "1. direct" << std::endl;
     std::cout << "2. reversed" << std::endl;
     std::cout << "Enter: ";
+
     std::cin >> direct;
+    std::cout << "Subtree: ";
     typename Tree<T>::Mode m = direct == 1 ? Tree<T>::L : Tree<T>::R;
 
-    std::cout << "Subtree: ";
     if (type == 1)
-        print_sub_tree_preorder(tree, std::cout, ' ', data, m) << std::endl;
+        print_sub_tree_preorder(tree, std::cout, " ", data, m) << std::endl;
     else if (type == 2)
-        print_sub_tree_inorder(tree, std::cout, ' ', data, m) << std::endl;
+        print_sub_tree_inorder(tree, std::cout, " ", data, m) << std::endl;
     else
-        print_sub_tree_postorder(tree, std::cout, ' ', data, m) << std::endl;
+        print_sub_tree_postorder(tree, std::cout, " ", data, m) << std::endl;
 }
 
 template <class T>
 void print_leafs(Tree<T> &tree) {
-    print_leafs(tree, std::cout, ' ') << std::endl;
+    std::cout << "Choose direction of printing: " << std::endl;
+    std::cout << "1. direct" << std::endl;
+    std::cout << "2. reversed" << std::endl;
+    std::cout << "Enter: ";
+
+    int direct;
+    std::cin >> direct;
+    std::cout << "Leafs: ";
+
+    typename Tree<T>::Mode m = direct == 1 ? Tree<T>::L : Tree<T>::R;
+    print_leafs(tree, std::cout, " ", m) << std::endl;
 }
 
 template <class T>
@@ -130,7 +139,7 @@ void print_branch(Tree<T> &tree) {
     std::cin >> data;
 
     std::cout << "Branch: ";
-    print_branch(tree, std::cout, ' ', data) << std::endl;
+    print_branch(tree, std::cout, " ", data) << std::endl;
 }
 
 template <class T>
@@ -185,6 +194,9 @@ void menu(Tree<T> &tree) {
             break;
         case 10:
             exit_ = true;
+            break;
+        default:
+            std::cout << "Wrong key!" << std::endl;
         }
     }
 }
